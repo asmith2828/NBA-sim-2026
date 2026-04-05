@@ -545,7 +545,7 @@ export default function App() {
         display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexShrink: 0,
       }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 16 }}>
-          <h1 style={{ fontSize: 17, fontWeight: 700, color: 'white', margin: 0, letterSpacing: '-0.02em' }}>NBA Effectiveness</h1>
+          <h1 style={{ fontSize: 17, fontWeight: 700, color: 'white', margin: 0, letterSpacing: '-0.02em' }}>NBA Effectiveness ✓</h1>
           <div style={{ display: 'flex', gap: 0 }}>
             {TABS.map(tab => (
               <button key={tab.key} onClick={() => setActiveTab(tab.key)}
