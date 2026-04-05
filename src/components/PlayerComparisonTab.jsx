@@ -407,7 +407,7 @@ function PlayerListView({ onSelect }) {
       </div>
 
       {/* Filters */}
-      <div style={{
+      <div className="comparison-filters" style={{
         display: 'flex', gap: 8, padding: '12px 20px',
         borderBottom: '1px solid #1a1a1a', flexShrink: 0,
       }}>
@@ -450,6 +450,7 @@ function PlayerListView({ onSelect }) {
           return (
             <div
               key={player.id}
+              className="comparison-player-row"
               onClick={() => onSelect(player)}
               style={{
                 display: 'flex', alignItems: 'center', gap: 14, padding: '12px 0',
@@ -463,7 +464,7 @@ function PlayerListView({ onSelect }) {
                 <span style={{ fontSize: 10, fontWeight: 700, color: pc.text }}>{player.pos}</span>
               </div>
               <div style={{ width: 160, flexShrink: 0 }}>
-                <p style={{ fontSize: 13, fontWeight: 700, color: 'white', margin: 0 }}>{player.name}</p>
+                <p className="comparison-player-name" style={{ fontSize: 13, fontWeight: 700, color: 'white', margin: 0 }}>{player.name}</p>
                 <p style={{ fontSize: 10, color: '#555', margin: '2px 0 0' }}>
                   {player.team} · {player.min ? `${player.min} mpg` : ''}
                 </p>
@@ -472,7 +473,7 @@ function PlayerListView({ onSelect }) {
                 <p style={{ fontSize: 20, fontWeight: 800, color: 'white', margin: 0 }}>{player.eff}</p>
                 <p style={{ fontSize: 8, color: '#444', margin: 0 }}>EFF</p>
               </div>
-              <div style={{ flex: 1 }}>
+              <div className="comparison-bars" style={{ flex: 1 }}>
                 <MiniMetricBars player={player} />
               </div>
             </div>

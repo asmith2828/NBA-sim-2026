@@ -8,6 +8,7 @@ import { NBA_TEAMS } from './data/teams';
 import { ALL_PLAYERS } from './data/normalizedPlayers';
 import { POS_COLORS, CATEGORY_GROUPS, lastName } from './utils/metrics';
 import { applyChemistry, CHEMISTRY_PROFILES, getChemistryLabel } from './utils/chemistry';
+import './mobile.css';
 import { getTeamColor, NBA_TEAM_COLORS } from './data/teamColors';
 
 const BENCH_SIZE = 5;
@@ -540,13 +541,13 @@ export default function App() {
   return (
     <div style={{ minHeight: '100vh', background: '#0d0d0d', display: 'flex', flexDirection: 'column' }}>
       {/* ── Top nav ──────────────────────────────────────────────────────── */}
-      <div style={{
+      <div className="nav-bar" style={{
         padding: '12px 20px 0', borderBottom: '1px solid #1a1a1a',
         display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexShrink: 0,
       }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 16 }}>
-          <h1 style={{ fontSize: 17, fontWeight: 700, color: 'white', margin: 0, letterSpacing: '-0.02em' }}>NBA Effectiveness ✓</h1>
-          <div style={{ display: 'flex', gap: 0 }}>
+          <h1 className="nav-title" style={{ fontSize: 17, fontWeight: 700, color: 'white', margin: 0, letterSpacing: '-0.02em' }}>NBA Effectiveness ✓</h1>
+          <div className="nav-tabs-desktop" style={{ display: 'flex', gap: 0 }}>
             {TABS.map(tab => (
               <button key={tab.key} onClick={() => setActiveTab(tab.key)}
                 style={{
@@ -561,7 +562,7 @@ export default function App() {
         </div>
 
         {activeTab === 'builder' && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingBottom: 10 }}>
+          <div className="nav-builder-toolbar" style={{ display: 'flex', alignItems: 'center', gap: 8, paddingBottom: 10 }}>
             <select
               value=""
               onChange={e => e.target.value && loadTeam(e.target.value)}
@@ -606,11 +607,26 @@ export default function App() {
       {/* ── Tab content ────────────────────────────────────────────────────── */}
       {activeTab === 'builder' && (
         <>
+          {/* Mobile builder toolbar — load/save, hidden on desktop */}
+          <div className="mobile-builder-toolbar tab-content">
+            <select
+              value=""
+              onChange={e => e.target.value && loadTeam(e.target.value)}
+              style={{ background: '#141414', border: '1px solid #2a2a2a', borderRadius: 8, color: '#aaa', fontSize: 13, padding: '7px 10px', cursor: 'pointer', flex: 1 }}
+            >
+              <option value="">Load team…</option>
+              {teamOptions.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+            </select>
+            {filledCount > 0 && (
+              <button onClick={clearAll} style={{ background: 'none', border: '1px solid #2a2a2a', borderRadius: 8, color: '#555', fontSize: 12, padding: '7px 12px', cursor: 'pointer', flexShrink: 0 }}>Clear</button>
+            )}
+          </div>
+
           {/* Team overall ratings bar */}
           {builderTeamOvr !== null && (
             <div style={{ flexShrink: 0, background: '#0a0a0a', borderBottom: '1px solid #1a1a1a' }}>
               {/* Row 1 — OVR + categories */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 20, padding: '10px 24px' }}>
+              <div className="team-ovr-bar" style={{ display: 'flex', alignItems: 'center', gap: 20, padding: '10px 24px' }}>
                 {/* Team overall */}
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, position: 'relative' }}>
                   <span style={{ fontSize: 10, color: '#444', fontWeight: 700, letterSpacing: '0.08em' }}>TEAM OVR</span>
@@ -630,7 +646,7 @@ export default function App() {
                 </div>
                 <div style={{ width: 1, height: 30, background: '#1a1a1a' }} />
                 {/* Category ratings */}
-                <div style={{ display: 'flex', gap: 20 }}>
+                <div className="team-ovr-categories" style={{ display: 'flex', gap: 20 }}>
                   {CATEGORY_GROUPS.map(g => {
                     const val = calcWeightedTeamRating(allBuilderPlayers, g.key) ?? null;
                     const delta = ratingDeltas?.cats?.[g.key] ?? 0;
@@ -755,7 +771,7 @@ export default function App() {
           )}
 
           {/* Category legend */}
-          <div style={{
+          <div className="legend-bar" style={{
             flexShrink: 0, display: 'flex', gap: 14, flexWrap: 'wrap',
             padding: '7px 24px', background: '#0a0a0a', borderBottom: '1px solid #141414',
           }}>
@@ -767,13 +783,13 @@ export default function App() {
           </div>
 
           {/* Court + Bench column */}
-          <div style={{ flexShrink: 0, display: 'flex', alignItems: 'stretch', gap: 0 }}>
+          <div className="builder-layout" style={{ flexShrink: 0, display: 'flex', alignItems: 'stretch', gap: 0 }}>
             {/* Court */}
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="court-wrapper" style={{ flex: 1, minWidth: 0 }}>
               <Court lineup={lineup} onSlotClick={handleStarterSlotClick} color={activeTeamColor} />
             </div>
-            {/* Bench column */}
-            <div style={{
+            {/* Bench column — desktop: vertical sidebar, mobile: hidden here (shown below) */}
+            <div className="bench-sidebar-desktop" style={{
               display: 'flex', flexDirection: 'column', gap: 10, padding: '16px 14px',
               justifyContent: 'center', background: '#0a0a0a', borderLeft: '1px solid #141414',
               minWidth: 80,
@@ -791,8 +807,23 @@ export default function App() {
             </div>
           </div>
 
+          {/* Bench row — mobile only horizontal scroll */}
+          <div className="bench-panel-mobile" style={{ display: 'none' }}>
+            <div style={{ fontSize: 7, color: '#333', fontWeight: 700, letterSpacing: '0.08em', alignSelf: 'center', marginRight: 4 }}>BENCH</div>
+            {bench.map((player, i) => (
+              <div key={i} className="bench-slot-mobile">
+                <BenchCircle
+                  player={player}
+                  index={i}
+                  teamColor={activeTeamColor}
+                  onClick={() => handleBenchSlotClick(i)}
+                />
+              </div>
+            ))}
+          </div>
+
           {/* Big player cards — starters + bench */}
-          <div style={{ flexShrink: 0, padding: '12px 16px', borderBottom: '1px solid #1a1a1a', overflowX: 'auto' }}>
+          <div className="player-cards-section" style={{ flexShrink: 0, padding: '12px 16px', borderBottom: '1px solid #1a1a1a', overflowX: 'auto' }}>
             <div style={{ display: 'flex', gap: 8, minWidth: 'max-content' }}>
               {/* Starter cards */}
               {starterCards.map(({ player, label }) =>
@@ -842,16 +873,35 @@ export default function App() {
       )}
 
       {activeTab === 'matchup' && (
-        <div style={{ flex: 1, overflowY: 'auto' }}>
+        <div className="tab-content" style={{ flex: 1, overflowY: 'auto' }}>
           <MatchupTab savedTeams={savedTeams} />
         </div>
       )}
 
       {activeTab === 'comparison' && (
-        <div style={{ flex: 1, overflowY: 'auto', position: 'relative' }}>
+        <div className="tab-content" style={{ flex: 1, overflowY: 'auto', position: 'relative' }}>
           <PlayerComparisonTab />
         </div>
       )}
+
+      {/* ── Bottom nav (mobile only) ──────────────────────────────────────── */}
+      <nav className="bottom-nav">
+        {[
+          { key: 'builder',    icon: '🏀', label: 'Builder'  },
+          { key: 'matchup',    icon: '⚡',  label: 'Matchup'  },
+          { key: 'comparison', icon: '📊',  label: 'Compare'  },
+        ].map(tab => (
+          <button key={tab.key} className="bottom-nav-btn" onClick={() => setActiveTab(tab.key)}>
+            <span className="bottom-nav-icon">{tab.icon}</span>
+            <span className="bottom-nav-label" style={{ color: activeTab === tab.key ? activeTeamColor : '#555' }}>
+              {tab.label}
+            </span>
+            {activeTab === tab.key && (
+              <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 24, height: 2, background: activeTeamColor, borderRadius: 1 }} />
+            )}
+          </button>
+        ))}
+      </nav>
     </div>
   );
 }

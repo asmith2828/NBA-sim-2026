@@ -534,9 +534,9 @@ function TeamSide({ sideLabel, color, lineup, bench, savedTeams, onLoad, score, 
   ];
 
   return (
-    <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <div className="matchup-team-block" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div className="matchup-team-selector" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <div style={{ width: 10, height: 10, borderRadius: '50%', background: color, flexShrink: 0 }} />
         <span style={{ fontSize: 11, color: '#666', fontWeight: 700 }}>{sideLabel}</span>
         <select onChange={e => e.target.value && onLoad(e.target.value)} defaultValue=""
@@ -658,7 +658,7 @@ export default function MatchupTab({ savedTeams }) {
   return (
     <div style={{ padding: '14px 20px', fontFamily: 'system-ui, sans-serif', display: 'flex', flexDirection: 'column', gap: 14 }}>
       {/* Simulate / result row */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
+      <div className="matchup-controls" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
         {result && (
           <span style={{ fontSize: 11, color: '#555' }}>
             {result.score1 > result.score2 ? 'Team A wins' : 'Team B wins'}
@@ -666,6 +666,7 @@ export default function MatchupTab({ savedTeams }) {
           </span>
         )}
         <button
+          className="simulate-btn"
           onClick={handleSimulate}
           disabled={!canSimulate || simulating}
           style={{
@@ -697,7 +698,7 @@ export default function MatchupTab({ savedTeams }) {
       </div>
 
       {/* Two-column layout */}
-      <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+      <div className="matchup-courts-row" style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
         <TeamSide
           sideLabel="TEAM A" color={color1}
           lineup={lineup1} bench={bench1}
