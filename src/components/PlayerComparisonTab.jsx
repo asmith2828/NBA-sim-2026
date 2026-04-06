@@ -38,7 +38,7 @@ function barLen(val, maxLen) {
 }
 
 // ── Draw 18 radial spokes + category-colored radar wedges ────────────────────
-function CircleBars({ cx, cy, r, player, strokeWidth }) {
+function CircleBars({ cx, cy, r, player, strokeWidth, onHoverStat }) {
   const barMax   = r * 0.90;
   const inner    = r + 6;
   const avgRingR = inner + barLen(50, barMax);
@@ -83,6 +83,8 @@ function CircleBars({ cx, cy, r, player, strokeWidth }) {
             fill={line.color}
             fillOpacity={0.12}
             stroke="none"
+            onMouseEnter={(e) => onHoverStat?.({ label: line.label, val: player[line.key] ?? 0, color: line.color, x: e.clientX, y: e.clientY })}
+            onMouseLeave={() => onHoverStat?.(null)}
           />
         );
       })}
@@ -155,6 +157,7 @@ const POS_CLR = {
 
 // ── Orbital display (all 10 similar players around the target) ────────────────
 function OrbitalDisplay({ target, comparisons, onSelectPlayer }) {
+  const [tooltip, setTooltip] = useState(null);
   // Compute organic layout once per target selection
   const planetPositions = useMemo(
     () => buildPlanetPositions(comparisons),
@@ -162,6 +165,7 @@ function OrbitalDisplay({ target, comparisons, onSelectPlayer }) {
   );
 
   return (
+    <>
     <svg
       viewBox={`0 0 ${SVG_W} ${SVG_H}`}
       style={{ width: '100%', maxWidth: SVG_W, display: 'block', margin: '0 auto' }}
@@ -169,7 +173,7 @@ function OrbitalDisplay({ target, comparisons, onSelectPlayer }) {
       <rect width={SVG_W} height={SVG_H} fill="#0d0d0d" rx={10} />
 
       {/* ── Center player ── */}
-      <CircleBars cx={CX} cy={CY} r={CENTER_R} player={target} strokeWidth={1.1} />
+      <CircleBars cx={CX} cy={CY} r={CENTER_R} player={target} strokeWidth={1.1} onHoverStat={setTooltip} />
       <circle cx={CX} cy={CY} r={CENTER_R + 5} fill="none" stroke="#fbbf24" strokeWidth={1} strokeOpacity={0.3} />
       <circle
         cx={CX} cy={CY} r={CENTER_R} fill="#1c1c1c" stroke="#fbbf24" strokeWidth={2} strokeOpacity={0.9}
@@ -218,7 +222,7 @@ function OrbitalDisplay({ target, comparisons, onSelectPlayer }) {
 
         return (
           <g key={p.id} style={{ cursor: 'pointer' }} onClick={() => onSelectPlayer(p)}>
-            <CircleBars cx={pcx} cy={pcy} r={r} player={p} strokeWidth={0.7} />
+            <CircleBars cx={pcx} cy={pcy} r={r} player={p} strokeWidth={0.7} onHoverStat={setTooltip} />
             <circle cx={pcx} cy={pcy} r={r + 4} fill="none" stroke="#333" strokeWidth={0.8} strokeOpacity={0.45} />
             <circle cx={pcx} cy={pcy} r={r} fill="#1c1c1c" stroke="#444" strokeWidth={1.5} strokeOpacity={0.75} />
 
@@ -251,6 +255,25 @@ function OrbitalDisplay({ target, comparisons, onSelectPlayer }) {
         );
       })}
     </svg>
+    {tooltip && (
+      <div style={{
+        position: 'fixed',
+        left: tooltip.x + 14,
+        top: tooltip.y - 48,
+        background: '#111',
+        border: `1px solid ${tooltip.color}88`,
+        borderRadius: 6,
+        padding: '5px 11px',
+        pointerEvents: 'none',
+        zIndex: 9999,
+        fontFamily: 'system-ui, sans-serif',
+        minWidth: 90,
+      }}>
+        <div style={{ fontSize: 9, color: tooltip.color, fontWeight: 700, marginBottom: 2, letterSpacing: '0.04em' }}>{tooltip.label}</div>
+        <div style={{ fontSize: 18, fontWeight: 800, color: 'white', lineHeight: 1 }}>{tooltip.val}</div>
+      </div>
+    )}
+    </>
   );
 }
 

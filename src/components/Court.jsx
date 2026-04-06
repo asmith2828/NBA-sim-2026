@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { applyChemistry } from '../utils/chemistry';
 import { calcEffectiveness, lastName } from '../utils/metrics';
 
@@ -30,24 +30,24 @@ function calcPosPenalty(slotKey, player) {
 // ── 18 court lines — clockwise from 12 o'clock, matching key left-to-right ────
 // Playmaking (3) → Shooting (3) → Finishing (3) → Rebounding (3) → Interior Def (3) → Perimeter Def (3)
 export const COURT_LINES = [
-  { key: 'decisionQuality',     color: '#3266ad' },  // Playmaking
-  { key: 'ballMovement',        color: '#3266ad' },
-  { key: 'courtVision',         color: '#3266ad' },
-  { key: 'shotQuality',         color: '#E24B4A' },  // Shooting
-  { key: 'shotCreation',        color: '#E24B4A' },
-  { key: 'shootingGravity',     color: '#E24B4A' },
-  { key: 'paintEfficiency',     color: '#BA7517' },  // Finishing
-  { key: 'driveImpact',         color: '#BA7517' },
-  { key: 'transitionScoring',   color: '#BA7517' },
-  { key: 'offRebounding',       color: '#1D9E75' },  // Rebounding
-  { key: 'defRebounding',       color: '#1D9E75' },
-  { key: 'reboundPositioning',  color: '#1D9E75' },
-  { key: 'rimProtection',       color: '#D85A30' },  // Interior Defense
-  { key: 'paintDeterrence',     color: '#D85A30' },
-  { key: 'interiorPositioning', color: '#D85A30' },
-  { key: 'onBallPressure',      color: '#7F77DD' },  // Perimeter Defense
-  { key: 'offBallAwareness',    color: '#7F77DD' },
-  { key: 'schemeVersatility',   color: '#7F77DD' },
+  { key: 'decisionQuality',     color: '#3266ad', label: 'Decision Quality' },
+  { key: 'ballMovement',        color: '#3266ad', label: 'Ball Movement' },
+  { key: 'courtVision',         color: '#3266ad', label: 'Court Vision' },
+  { key: 'shotQuality',         color: '#E24B4A', label: 'Shot Quality' },
+  { key: 'shotCreation',        color: '#E24B4A', label: 'Shot Creation' },
+  { key: 'shootingGravity',     color: '#E24B4A', label: 'Shooting Gravity' },
+  { key: 'paintEfficiency',     color: '#BA7517', label: 'Paint Efficiency' },
+  { key: 'driveImpact',         color: '#BA7517', label: 'Drive Impact' },
+  { key: 'transitionScoring',   color: '#BA7517', label: 'Transition Scoring' },
+  { key: 'offRebounding',       color: '#1D9E75', label: 'Off. Rebounding' },
+  { key: 'defRebounding',       color: '#1D9E75', label: 'Def. Rebounding' },
+  { key: 'reboundPositioning',  color: '#1D9E75', label: 'Rebd. Positioning' },
+  { key: 'rimProtection',       color: '#D85A30', label: 'Rim Protection' },
+  { key: 'paintDeterrence',     color: '#D85A30', label: 'Paint Deterrence' },
+  { key: 'interiorPositioning', color: '#D85A30', label: 'Interior Position' },
+  { key: 'onBallPressure',      color: '#7F77DD', label: 'On-Ball Pressure' },
+  { key: 'offBallAwareness',    color: '#7F77DD', label: 'Off-Ball Awareness' },
+  { key: 'schemeVersatility',   color: '#7F77DD', label: 'Scheme Versatility' },
 ];
 
 export const SLOT_DEFS = [
@@ -65,7 +65,7 @@ function barLength(val) {
   return 4 + Math.pow(t, 1.5) * 58;
 }
 
-function PlayerSlotNode({ slotDef, player, boostedPlayer, posPenalty, chemDelta, subDeltas, onClick, overrideColor }) {
+function PlayerSlotNode({ slotDef, player, boostedPlayer, posPenalty, chemDelta, subDeltas, onClick, overrideColor, onHoverStat }) {
   const { cx, cy, key, label } = slotDef;
   const color = overrideColor ?? slotDef.color;
   const hasPlayer = !!player;
@@ -169,6 +169,8 @@ function PlayerSlotNode({ slotDef, player, boostedPlayer, posPenalty, chemDelta,
                 fill={sd < 0 ? '#f87171' : line.color}
                 fillOpacity={fillOp}
                 stroke="none"
+                onMouseEnter={(e) => onHoverStat?.({ label: line.label, val: displayPlayer[line.key] ?? 0, color: line.color, x: e.clientX, y: e.clientY })}
+                onMouseLeave={() => onHoverStat?.(null)}
               />
             );
           })}
@@ -254,9 +256,11 @@ function PlayerSlotNode({ slotDef, player, boostedPlayer, posPenalty, chemDelta,
 }
 
 export default function Court({ lineup, onSlotClick, color }) {
+  const [tooltip, setTooltip] = useState(null);
   // color: if provided, all player slot circles use this single color (team color mode).
   //        if omitted, each slot uses its own position-based color from SLOT_DEFS.
   return (
+    <>
     <svg viewBox="0 0 800 560" style={{ width: '100%', display: 'block' }} xmlns="http://www.w3.org/2000/svg">
       <rect width="800" height="612" fill="#0f0f0f" />
 
@@ -336,9 +340,29 @@ export default function Court({ lineup, onSlotClick, color }) {
             subDeltas={subDeltas}
             onClick={() => onSlotClick(slot.key)}
             overrideColor={color}
+            onHoverStat={setTooltip}
           />
         );
       })}
     </svg>
+    {tooltip && (
+      <div style={{
+        position: 'fixed',
+        left: tooltip.x + 14,
+        top: tooltip.y - 48,
+        background: '#111',
+        border: `1px solid ${tooltip.color}88`,
+        borderRadius: 6,
+        padding: '5px 11px',
+        pointerEvents: 'none',
+        zIndex: 9999,
+        fontFamily: 'system-ui, sans-serif',
+        minWidth: 90,
+      }}>
+        <div style={{ fontSize: 9, color: tooltip.color, fontWeight: 700, marginBottom: 2, letterSpacing: '0.04em' }}>{tooltip.label}</div>
+        <div style={{ fontSize: 18, fontWeight: 800, color: 'white', lineHeight: 1 }}>{tooltip.val}</div>
+      </div>
+    )}
+    </>
   );
 }
