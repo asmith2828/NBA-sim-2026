@@ -546,7 +546,7 @@ export default function App() {
         display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexShrink: 0,
       }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 16 }}>
-          <h1 className="nav-title" style={{ fontSize: 17, fontWeight: 700, color: 'white', margin: 0, letterSpacing: '-0.02em' }}>FastBreak</h1>
+          <h1 className="nav-title" style={{ fontSize: 17, fontWeight: 700, color: 'white', margin: 0, letterSpacing: '-0.02em' }}>FastBreak NBA</h1>
           <div className="nav-tabs-desktop" style={{ display: 'flex', gap: 0 }}>
             {TABS.map(tab => (
               <button key={tab.key} onClick={() => setActiveTab(tab.key)}
