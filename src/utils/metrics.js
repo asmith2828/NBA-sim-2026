@@ -40,6 +40,10 @@ export function getPositionTier(player) {
 }
 
 // ─── INVERTED STATS ────────────────────────────────────────────────────────────
+// Most inverted stats are stored as pre-converted percentile ranks (high = good for player).
+// A small subset — RAW_INVERTED_STATS — are stored as raw directional values
+// where LOW = good (e.g. defRimRateDiff: 4 means only 4% of rim attempts get through = elite).
+// calcSubcategoryScore applies (100 - value) for these before scoring.
 export const INVERTED_STATS = new Set([
   'liveBallTovRate',
   'contestedShotPct',
@@ -54,6 +58,10 @@ export const INVERTED_STATS = new Set([
   'helpRotationSpeed',
   'switchEffectiveness',
 ]);
+
+// These specific stats are stored as raw directional values (low = better defense).
+// All other inverted stats are already stored as percentile ranks (high = better).
+const RAW_INVERTED_STATS = new Set(['defRimRateDiff', 'driveFreqAllowed']);
 
 // ─── CATEGORY GROUPS ──────────────────────────────────────────────────────────
 // Layer 4 note: `effSubWeight` on each subcategory replaces the old per-category
@@ -440,7 +448,11 @@ function calcSubcategoryScore(player, subcategory) {
   if (hasStats) {
     const totalWeight = subcategory.stats.reduce((sum, s) => sum + s.weight, 0);
     const weightedSum = subcategory.stats.reduce((sum, s) => {
-      return sum + (player[s.key] ?? 50) * s.weight;
+      let val = player[s.key] ?? 50;
+      // Raw inverted stats are stored as "low = good" directional values.
+      // Flip them so the score correctly reflects defensive quality.
+      if (RAW_INVERTED_STATS.has(s.key)) val = 100 - val;
+      return sum + val * s.weight;
     }, 0);
     return Math.max(1, Math.min(99, Math.round(weightedSum / totalWeight)));
   }
@@ -500,18 +512,36 @@ export const normalizeByPosition = normalizeByPositionTier;
 // ─────────────────────────────────────────────────────────────────────────────
 // LAYER 2.5 — Net Impact Anchor
 // ─────────────────────────────────────────────────────────────────────────────
-export function applyNetImpactAnchor(normalizedScore, netRtgAdjustment) {
-  if (netRtgAdjustment == null) return normalizedScore;
-  const anchored = normalizedScore * 0.85 + netRtgAdjustment * 0.15;
+//
+// netRtg: raw on/off net rating differential (e.g. +8.5 for Jokic, -3 for bench warmers)
+//   → converted to a 1–99 anchor: netRtg=0 → 50, +10 → 80, -10 → 20
+// netRtgAdjustment: legacy override (1–99 scale), takes precedence if set
+//
+// The anchor is blended at 10% weight into each normalized subcategory score.
+// Effect: +10 net rating nudges every subcategory ~3 points upward.
+//         A player with no netRtg data is unaffected (anchor is skipped).
+export function netRtgToAnchor(netRtg) {
+  return Math.round(Math.min(99, Math.max(1, 50 + netRtg * 3)));
+}
+
+export function applyNetImpactAnchor(normalizedScore, anchor) {
+  if (anchor == null) return normalizedScore;
+  const anchored = normalizedScore * 0.90 + anchor * 0.10;
   return Math.round(Math.min(99, Math.max(1, anchored)));
 }
 
 export function applyNetImpactAnchors(player) {
-  const adjustment = player.netRtgAdjustment ?? null;
-  if (adjustment == null) return { ...player };
+  // Prefer explicit netRtgAdjustment override; fall back to computed netRtg anchor
+  let anchor = null;
+  if (player.netRtgAdjustment != null) {
+    anchor = player.netRtgAdjustment;
+  } else if (player.netRtg != null) {
+    anchor = netRtgToAnchor(player.netRtg);
+  }
+  if (anchor == null) return { ...player };
   const anchored = { ...player };
   for (const key of ALL_SUBCATEGORY_KEYS) {
-    anchored[key] = applyNetImpactAnchor(player[key] ?? 50, adjustment);
+    anchored[key] = applyNetImpactAnchor(player[key] ?? 50, anchor);
   }
   return anchored;
 }
