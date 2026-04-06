@@ -546,7 +546,7 @@ export default function App() {
         display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexShrink: 0,
       }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 16 }}>
-          <h1 className="nav-title" style={{ fontSize: 17, fontWeight: 700, color: 'white', margin: 0, letterSpacing: '-0.02em' }}>NBA Effectiveness ✓</h1>
+          <h1 className="nav-title" style={{ fontSize: 17, fontWeight: 700, color: 'white', margin: 0, letterSpacing: '-0.02em' }}>FastBreak</h1>
           <div className="nav-tabs-desktop" style={{ display: 'flex', gap: 0 }}>
             {TABS.map(tab => (
               <button key={tab.key} onClick={() => setActiveTab(tab.key)}
@@ -887,12 +887,11 @@ export default function App() {
       {/* ── Bottom nav (mobile only) ──────────────────────────────────────── */}
       <nav className="bottom-nav">
         {[
-          { key: 'builder',    icon: '🏀', label: 'Builder'  },
-          { key: 'matchup',    icon: '⚡',  label: 'Matchup'  },
-          { key: 'comparison', icon: '📊',  label: 'Compare'  },
+          { key: 'builder',    label: 'Builder'  },
+          { key: 'matchup',    label: 'Matchup'  },
+          { key: 'comparison', label: 'Compare'  },
         ].map(tab => (
           <button key={tab.key} className="bottom-nav-btn" onClick={() => setActiveTab(tab.key)}>
-            <span className="bottom-nav-icon">{tab.icon}</span>
             <span className="bottom-nav-label" style={{ color: activeTab === tab.key ? activeTeamColor : '#555' }}>
               {tab.label}
             </span>
