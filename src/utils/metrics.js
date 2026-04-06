@@ -547,6 +547,37 @@ export function applyNetImpactAnchors(player) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// LAYER 2.75 — Height Modifier (Interior Defense only)
+// ─────────────────────────────────────────────────────────────────────────────
+//
+// After tier normalization, a guard with great (for a guard) interior D stats
+// can score as high as an elite big, because they're compared within-tier.
+// This layer corrects that by anchoring interior D to physical size.
+//
+// Formula: bonus = clamp((heightInches - 79) * 1.6, -14, 14)
+//   • 6'7" (79 in) → neutral (±0)
+//   • 7'0" (84 in) → +8
+//   • 7'4" (88 in) → +14  (Wembanyama, Edey)
+//   • 6'4" (76 in) → -5   (guards get a mild nerf)
+//   • 6'0" (72 in) → -11  (short guards heavily penalized)
+//
+// Applied only to: rimProtection, paintDeterrence, interiorPositioning
+// Players with no heightInches data are unaffected.
+const INTERIOR_DEF_SUBCATS = new Set(['rimProtection', 'paintDeterrence', 'interiorPositioning']);
+
+export function applyHeightModifier(player) {
+  const height = player.heightInches;
+  if (height == null) return { ...player };
+  const bonus = Math.round(Math.min(14, Math.max(-14, (height - 79) * 1.6)));
+  if (bonus === 0) return { ...player };
+  const adjusted = { ...player };
+  for (const key of INTERIOR_DEF_SUBCATS) {
+    adjusted[key] = Math.min(99, Math.max(1, (adjusted[key] ?? 50) + bonus));
+  }
+  return adjusted;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // LAYER 3 — Subcategory → Category Weighted Averages
 // ─────────────────────────────────────────────────────────────────────────────
 export function deriveParentScores(player) {
@@ -672,13 +703,14 @@ export function calculatePlayerEFF(player, allPlayers, chemistryBoosts = {}, isB
   const normalizedPlayer = normalizedPool.find(p => p.id === player.id)
     ?? { ...player, ...rawSubcategoryScores };
 
-  const anchoredPlayer = applyNetImpactAnchors(normalizedPlayer);
+  const anchoredPlayer  = applyNetImpactAnchors(normalizedPlayer);
+  const heightAdjPlayer = applyHeightModifier({ ...anchoredPlayer, heightInches: player.heightInches });
   const normalizedSubcategoryScores = Object.fromEntries(
-    ALL_SUBCATEGORY_KEYS.map(k => [k, anchoredPlayer[k] ?? 50])
+    ALL_SUBCATEGORY_KEYS.map(k => [k, heightAdjPlayer[k] ?? 50])
   );
 
   const boostedScores = applyChemistryBoosts(normalizedSubcategoryScores, chemistryBoosts);
-  const playerWithBoosts = { ...anchoredPlayer, ...boostedScores };
+  const playerWithBoosts = { ...heightAdjPlayer, ...boostedScores };
 
   const withCategories = deriveParentScores(playerWithBoosts);
   const categoryScores = Object.fromEntries(
